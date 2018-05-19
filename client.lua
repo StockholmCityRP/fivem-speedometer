@@ -59,8 +59,12 @@ end
 
 Citizen.CreateThread(function()
 	currentSkin = GetResourceKvpString("fivem-speedometer:skin")
-	if not currentSkin or currentSkin == "default" then
-		SetResourceKvp("fivem-speedometer:skin", "default")
+	if not currentSkin then
+		currentSkin = Config.DefaultSkin
+		SetResourceKvp("fivem-speedometer:skin", Config.DefaultSkin)
+	end
+
+	if currentSkin == "default" then
 		if DoesSkinExist("default") then
 			currentSkin = "default"
 			changeSkin("default")
@@ -72,6 +76,7 @@ Citizen.CreateThread(function()
 		for i,theSkin in pairs(skins) do
 			if theSkin.skinName == currentSkin then
 				cst = theSkin
+				break
 			end
 		end
 		if not cst then changeSkin(skins[1].skinName) end
@@ -250,6 +255,27 @@ Citizen.CreateThread(function()
 			fakeTimer	= 0
 		end
 	end
+end)
+
+RegisterNetEvent('fivem-speedometer:playSound')
+AddEventHandler('fivem-speedometer:playSound', function(soundFile, soundVolume, loop)
+	if not Config.PlaySpeedChime then return end
+
+	SendNUIMessage({
+		action	= 'playSound',
+		file	= soundFile,
+		volume	= soundVolume,
+		loop	= loop
+	})
+end)
+
+RegisterNetEvent('fivem-speedometer:stopSound')
+AddEventHandler('fivem-speedometer:stopSound', function()
+	if not Config.PlaySpeedChime then return end
+
+	SendNUIMessage({
+		action = 'stopSound'
+	})
 end)
 
 Citizen.CreateThread(function()

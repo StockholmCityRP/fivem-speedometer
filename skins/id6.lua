@@ -36,7 +36,6 @@ local skinData = {
 addSkin(skinData)
 
 -- addon code
-local idcars = {"FUTO", "AE86", "86", "BLISTA2"} -- cars that use the AE86 speed chime and ae86 RPM background
 local labelType = "8k"
 local curDriftAlpha = 0
 local curAlpha = 0
@@ -84,13 +83,13 @@ Citizen.CreateThread(function()
 						if curAlpha >= 255 then
 							curAlpha = 255
 						else
-							curAlpha = curAlpha+5
+							curAlpha = curAlpha + 5
 						end
 				elseif not IsPedInAnyVehicle(GetPlayerPed(-1),false) then
 						if curAlpha <= 0 then
 							curAlpha = 0
 						else
-							curAlpha = curAlpha-5
+							curAlpha = curAlpha - 5
 						end
 					end
 			end
@@ -111,17 +110,19 @@ Citizen.CreateThread(function()
 					labelType = "13k"
 					skinData.rpmScale = 220
 				end
-				for i,theName in ipairs(idcars) do
-					if string.find(GetDisplayNameFromVehicleModel(GetEntityModel(veh)), theName) ~= nil and string.find(GetDisplayNameFromVehicleModel(GetEntityModel(veh)), theName) >= 0 then
-						labelType = "86"
-						skinData.rpmScale = 242
-					end
+
+				for i,theName in ipairs(Config.SpecialCars) do
 					if GetDisplayNameFromVehicleModel(GetEntityModel(veh)) == theName then
-						if not SpeedChimeActive and GetEntitySpeed(veh)*3.6 > 105.0 then
+						labelType = "86"
+						cst.rpmScale = 242
+						if not SpeedChimeActive and GetEntitySpeed(veh) * 3.6 > 105.0 then
 							SpeedChimeActive = true
-						elseif SpeedChimeActive and GetEntitySpeed(veh)*3.6 < 105.0 then
+							TriggerEvent('fivem-speedometer:playSound', 'initiald', 0.7, true)
+						elseif SpeedChimeActive and GetEntitySpeed(veh) * 3.6 < 105.0 then
 							SpeedChimeActive = false
+							TriggerEvent('fivem-speedometer:stopSound')
 						end
+						break
 					end
 				end
 
@@ -135,7 +136,7 @@ Citizen.CreateThread(function()
 					end
 					curTurboNeedle = "needle"
 				else
-					curTachometer = "labels_"..labelType
+					curTachometer = "labels_" .. labelType
 					if useKMH then
 						curTurbo = "turbo_day"
 					else
@@ -159,13 +160,9 @@ Citizen.CreateThread(function()
 
 				if useKMH then
 					speed = GetEntitySpeed(veh) * 3.6
+					DrawSprite(skinData.ytdName, "km/h", skinData.centerCoords[1]+skinData.UnitLoc[1],skinData.centerCoords[2]+skinData.UnitLoc[2],skinData.UnitLoc[3],skinData.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
 				else
 					speed = GetEntitySpeed(veh) * 2.236936
-				end
-
-				if useKMH then
-					DrawSprite(skinData.ytdName, "kmh", skinData.centerCoords[1]+skinData.UnitLoc[1],skinData.centerCoords[2]+skinData.UnitLoc[2],skinData.UnitLoc[3],skinData.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
-				else
 					DrawSprite(skinData.ytdName, "mph", skinData.centerCoords[1]+skinData.UnitLoc[1],skinData.centerCoords[2]+skinData.UnitLoc[2],skinData.UnitLoc[3],skinData.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
 				end
 

@@ -36,7 +36,6 @@ local skinData = {
 addSkin(skinData)
 
 -- addon code
-local idcars = {"FUTO", "AE86", "86", "BLISTA2"} -- cars that use the AE86 speed chime and ae86 RPM background
 local labelType = "8k"
 local curDriftAlpha = 0
 
@@ -95,17 +94,19 @@ Citizen.CreateThread(function()
 					labelType = "13k"
 					cst.rpmScale = 235
 				end
-				for i,theName in ipairs(idcars) do
-					if string.find(GetDisplayNameFromVehicleModel(GetEntityModel(veh)), theName) ~= nil and string.find(GetDisplayNameFromVehicleModel(GetEntityModel(veh)), theName) >= 0 then
+
+				for i,theName in ipairs(Config.SpecialCars) do
+					if GetDisplayNameFromVehicleModel(GetEntityModel(veh)) == theName then
 						labelType = "86"
 						cst.rpmScale = 242
-					end
-					if GetDisplayNameFromVehicleModel(GetEntityModel(veh)) == theName then
-						if not SpeedChimeActive and GetEntitySpeed(veh)*3.6 > 105.0 then
+						if not SpeedChimeActive and GetEntitySpeed(veh) * 3.6 > 105.0 then
 							SpeedChimeActive = true
-						elseif SpeedChimeActive and GetEntitySpeed(veh)*3.6 < 105.0 then
+							TriggerEvent('fivem-speedometer:playSound', 'initiald', 0.7, true)
+						elseif SpeedChimeActive and GetEntitySpeed(veh) * 3.6 < 105.0 then
 							SpeedChimeActive = false
+							TriggerEvent('fivem-speedometer:stopSound')
 						end
+						break
 					end
 				end
 
@@ -132,13 +133,9 @@ Citizen.CreateThread(function()
 
 				if useKMH then
 					speed = GetEntitySpeed(veh) * 3.6
+					DrawSprite(cst.ytdName, "km/h", cst.centerCoords[1]+cst.UnitLoc[1],cst.centerCoords[2]+cst.UnitLoc[2],cst.UnitLoc[3],cst.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
 				else
 					speed = GetEntitySpeed(veh) * 2.236936
-				end
-
-				if useKMH then
-					DrawSprite(cst.ytdName, "kmh", cst.centerCoords[1]+cst.UnitLoc[1],cst.centerCoords[2]+cst.UnitLoc[2],cst.UnitLoc[3],cst.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
-				else
 					DrawSprite(cst.ytdName, "mph", cst.centerCoords[1]+cst.UnitLoc[1],cst.centerCoords[2]+cst.UnitLoc[2],cst.UnitLoc[3],cst.UnitLoc[4], 0.0, 255, 255, 255, curAlpha)
 				end
 
