@@ -1,31 +1,31 @@
---SETTINGS--
-showFuelGauge = true -- use fuel gauge?
-skins = {}
---SETTINGS END--
-overwriteAlpha = false
+showFuelGauge	= true  -- use fuel gauge?
+overwriteChecks	= false -- debug value to display all icons
+useKMH			= (GetProfileSetting(227) == 1)
+skins			= {}
 
 function addSkin(skin)
-	table.insert(skins,skin)
+	table.insert(skins, skin)
 end
 
 function getAvailableSkins()
-	local tt = {}
+	local skinList = {}
 	for i,theSkin in pairs(skins) do
-		table.insert(tt,theSkin.skinName)
+		table.insert(skinList, theSkin.skinName)
 	end
-	return tt
+	return skinList
 end
 
 function toggleFuelGauge(toggle)
 	showFuelGauge = toggle
 end
 
+overwriteAlpha = false
 function changeSkin(skin)
 	for i,theSkin in pairs(skins) do
 		if theSkin.skinName == skin then
 			cst = theSkin
 			currentSkin = theSkin.skinName
-			SetResourceKvp("sexyspeedo_skin", skin)
+			SetResourceKvp("fivem-speedometer:skin", skin)
 			showFuelGauge = true
 			overwriteAlpha = false
 			return true
@@ -58,9 +58,9 @@ function toggleSpeedo(state)
 end
 
 Citizen.CreateThread(function()
-	currentSkin = GetResourceKvpString("sexyspeedo_skin")
+	currentSkin = GetResourceKvpString("fivem-speedometer:skin")
 	if not currentSkin or currentSkin == "default" then
-		SetResourceKvp("sexyspeedo_skin", "default")
+		SetResourceKvp("fivem-speedometer:skin", "default")
 		if DoesSkinExist("default") then
 			currentSkin = "default"
 			changeSkin("default")
@@ -78,82 +78,57 @@ Citizen.CreateThread(function()
 	end
 end)
 
---cst = {skinName = "default",ytdName = "default",lightsIconLocation = {0.810,0.892,0.018,0.02},blinkerIconLocation = {0.905,0.834,0.022,0.03},fuelIconLocation = {0.905,0.890,0.012,0.025},oilIconLocation = {0.900,0.862,0.020,0.025},engineIconLocation = {0.930,0.892,0.020,0.025},SpeedometerBGLocation = {0.800,0.860,0.12,0.185},SpeedometerNeedleLocation = {0.800,0.862,0.076,0.15},TachometerBGLocation = {0.920,0.860,0.12,0.185},TachoNeedleLocation = {0.920,0.862,0.076,0.15},FuelBGLocation = {0.860, 0.780,0.04, 0.04},FuelGaugeLocation = {0.860,0.800,0.040,0.08},RotMultiplier = 2.036936,RotStep = 2.32833}
--- temporary skinTable incase what i had in mind doesnt work
-
-RegisterCommand("speedoskin", function(source, args, rawCommand)
-	if args[1] then
-		changeSkin(args[1])
-	end
-end, false)
-
-RegisterCommand("speedoskins", function(source, args, rawCommand)
-	local s = getAvailableSkins()
-	local ss = ""
-	for i,s in pairs(s) do
-		ss = ss..""..s..", "
-	end
-	TriggerEvent("chat:addMessage", { args = { "Available Skins", ss } })
-end, false)
-
-RegisterCommand("togglespeedo", function(source, args, rawCommand)
-	toggleSpeedo()
-end, false)
-
-
-
 curNeedle, curTachometer, curSpeedometer, curFuelGauge, curAlpha = "needle_day", "tachometer_day", "speedometer_day", "fuelgauge_day",0
 RPM, degree, blinkertick, showBlinker = 0, 0, 0, false
-overwriteChecks = false -- debug value to display all icons
+
 Citizen.CreateThread(function()
-	TriggerEvent('chat:addSuggestion', '/togglespeedo', 'show/hide speedometer' )
-	TriggerEvent('chat:addSuggestion', '/speedoskins', 'show all available speedometer skins' )
-	TriggerEvent('chat:addSuggestion', '/speedoskin', 'change the speedometer skin', { {name='skin', help="the skin name"} } )
 	while true do
 		Citizen.Wait(0)
 		veh = GetVehiclePedIsUsing(GetPlayerPed(-1))
 		if overwriteAlpha then curAlpha = 0 end
 		if not overwriteAlpha then
-			if IsPedInAnyVehicle(GetPlayerPed(-1),true) and GetSeatPedIsTryingToEnter(GetPlayerPed(-1)) == -1 or GetPedInVehicleSeat(veh, -1) == GetPlayerPed(-1) then
-					if curAlpha >= 255 then
-						curAlpha = 255
-					else
-						curAlpha = curAlpha+5
-					end
-			elseif not IsPedInAnyVehicle(GetPlayerPed(-1),false) then
-					if curAlpha <= 0 then
-						curAlpha = 0
-					else
-						curAlpha = curAlpha-5
-					end
+			if IsPedInAnyVehicle(GetPlayerPed(-1), true) and GetSeatPedIsTryingToEnter(GetPlayerPed(-1)) == -1 or GetPedInVehicleSeat(veh, -1) == GetPlayerPed(-1) then
+				if curAlpha >= 255 then
+					curAlpha = 255
+				else
+					curAlpha = curAlpha + 5
 				end
+			elseif not IsPedInAnyVehicle(GetPlayerPed(-1), false) then
+				if curAlpha <= 0 then
+					curAlpha = 0
+				else
+					curAlpha = curAlpha - 5
+				end
+			end
 		end
 
 		if not HasStreamedTextureDictLoaded(cst.ytdName) then
 			RequestStreamedTextureDict(cst.ytdName, true)
 			while not HasStreamedTextureDictLoaded(cst.ytdName) do
-				Wait(0)
+				Citizen.Wait(1)
 			end
 		else
 			if DoesEntityExist(veh) and not IsEntityDead(veh) then
 				degree, step = 0, cst.RotStep
 				RPM = GetVehicleCurrentRpm(veh)
-				if not GetIsVehicleEngineRunning(veh) then RPM = 0 end -- fix for R*'s Engine RPM fuckery
+				if not GetIsVehicleEngineRunning(veh) then RPM = 0 end
 				if RPM > 0.99 then
-					RPM = RPM*100
-					RPM = RPM+math.random(-2,2)
-					RPM = RPM/100
+					RPM = RPM * 100
+					RPM = RPM + math.random(-2, 2)
+					RPM = RPM / 100
 				end
-				blinkerstate = GetVehicleIndicatorLights(veh) -- owo whats this
-				if blinkerstate == 0 then
-					blinkerleft,blinkerright = false,false
-				elseif blinkerstate == 1 then
-					blinkerleft,blinkerright = true,false
-				elseif blinkerstate == 2 then
-					blinkerleft,blinkerright = false,true
-				elseif blinkerstate == 3 then
-					blinkerleft,blinkerright = true,true
+
+				blinkerState = GetVehicleIndicatorLights(veh)
+				if blinkerState == 0 then
+					blinkerLeft,blinkerRight = false,false
+				elseif blinkerState == 1 then
+					blinkerLeft,blinkerRight = true,false
+				elseif blinkerState == 2 then
+					blinkerLeft,blinkerRight = false,true
+				elseif blinkerState == 3 then
+					blinkerLeft,blinkerRight = true,true
 				end
+
 				engineHealth = GetVehicleEngineHealth(veh)
 				if engineHealth <= 350 and engineHealth > 100 then
 					showDamageYellow,showDamageRed = true,false
@@ -162,6 +137,7 @@ Citizen.CreateThread(function()
 				else
 					showDamageYellow,showDamageRed = false, false
 				end
+
 				OilLevel = GetVehicleOilLevel(veh)
 				FuelLevel = GetVehicleFuelLevel(veh)
 				MaxFuelLevel = Citizen.InvokeNative(0x642FC12F, veh, "CHandlingData", "fPetrolTankVolume", Citizen.ReturnResultAnyway(), Citizen.ResultAsFloat())
@@ -177,6 +153,7 @@ Citizen.CreateThread(function()
 				else
 					showLowOil = false
 				end
+
 				_,lightson,highbeams = GetVehicleLightsState(veh)
 				if lightson == 1 or highbeams == 1 then
 					curNeedle, curTachometer, curSpeedometer, curFuelGauge = "needle", "tachometer", "speedometer", "fuelgauge"
@@ -188,6 +165,7 @@ Citizen.CreateThread(function()
 				else
 					curNeedle, curTachometer, curSpeedometer, curFuelGauge, showHighBeams, showLowBeams = "needle_day", "tachometer_day", "speedometer_day", "fuelgauge_day", false, false
 				end
+
 				if GetEntitySpeed(veh) > 0 then degree=(GetEntitySpeed(veh)*2.036936)*step end
 				if degree > 290 then degree=290 end
 				if GetVehicleClass(veh) >= 0 and GetVehicleClass(veh) < 13 or GetVehicleClass(veh) >= 17 then
@@ -201,18 +179,19 @@ Citizen.CreateThread(function()
 			if RPM < 0.12 or not RPM then
 				RPM = 0.12
 			end
+
 			if overwriteChecks then
-				showHighBeams,showLowBeams,showBlinker,blinkerleft,blinkerright,showDamageRed,showLowFuelRed,showLowOil = true, true, true, true, true ,true, true, true
+				showHighBeams,showLowBeams,showBlinker,blinkerLeft,blinkerRight,showDamageRed,showLowFuelRed,showLowOil = true, true, true, true, true ,true, true, true
 			end
 			if showHighBeams then
 				DrawSprite(cst.ytdName, cst.BeamLight or "lights", cst.centerCoords[1]+cst.lightsLoc[1],cst.centerCoords[2]+cst.lightsLoc[2],cst.lightsLoc[3],cst.lightsLoc[4],0, 0, 50, 240, curAlpha)
 			elseif showLowBeams then
 				DrawSprite(cst.ytdName, cst.BeamLight or "lights", cst.centerCoords[1]+cst.lightsLoc[1],cst.centerCoords[2]+cst.lightsLoc[2],cst.lightsLoc[3],cst.lightsLoc[4],0, 0, 255, 0, curAlpha)
 			end
-			if blinkerleft and showBlinker then
+			if blinkerLeft and showBlinker then
 				DrawSprite(cst.ytdName, cst.BlinkerLight or "blinker", cst.centerCoords[1]+cst.blinkerLoc[1],cst.centerCoords[2]+cst.blinkerLoc[2],cst.blinkerLoc[3],cst.blinkerLoc[4],180.0, 124,252,0, curAlpha)
 			end
-			if blinkerright and showBlinker then
+			if blinkerRight and showBlinker then
 				DrawSprite(cst.ytdName, cst.BlinkerLight or "blinker", cst.centerCoords[1]+cst.blinkerLoc[1]+0.03,cst.centerCoords[2]+cst.blinkerLoc[2]-0.001,cst.blinkerLoc[3],cst.blinkerLoc[4],0.0, 124,252,0, curAlpha)
 			end
 			if MaxFuelLevel ~= 0 then
@@ -245,17 +224,73 @@ Citizen.CreateThread(function()
 
 end)
 
-
-
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(0)
-		if blinkerleft or blinkerright then
+		if blinkerLeft or blinkerRight then
 			showBlinker = true
 			Citizen.Wait(500)
 			showBlinker = false
 			Citizen.Wait(500)
+		else
+			Citizen.Wait(1000)
 		end
 	end
-end
-)
+end)
+
+-- Keep updating the selected measurement unit
+Citizen.CreateThread(function()
+	local fakeTimer = 0
+	while true do
+		Citizen.Wait(2000)
+		fakeTimer = fakeTimer + 2000
+
+		if fakeTimer == 10000 then
+			useKMH		= (GetProfileSetting(227) == 1)
+			fakeTimer	= 0
+		end
+	end
+end)
+
+Citizen.CreateThread(function()
+	TriggerEvent('chat:addSuggestion', '/speedoskin', 'change the speedometer skin', { {name='skin', help='the skin name'} } )
+	TriggerEvent('chat:addSuggestion', '/speedoskins', 'show all available speedometer skins')
+	TriggerEvent('chat:addSuggestion', '/speedotoggle', 'toggle the speedometer')
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+	if resource == GetCurrentResourceName() then
+		TriggerEvent('chat:removeSuggestion', '/speedoskin')
+		TriggerEvent('chat:removeSuggestion', '/speedoskins')
+		TriggerEvent('chat:removeSuggestion', '/speedotoggle')
+	end
+end)
+
+RegisterCommand('speedoskin', function(source, args, rawCommand)
+	if args[1] and DoesSkinExist(args[1]) then
+		changeSkin(args[1])
+	else
+		TriggerEvent('chat:addMessage', { args = { '^3ERROR', 'unknown skin' } })
+	end
+end, false)
+
+RegisterCommand('speedoskins', function(source, args, rawCommand)
+	local skins		= getAvailableSkins()
+	local message	= ""
+	local first		= true
+
+	for i,skin in pairs(skins) do
+		if first then
+			message = skin 
+			first = false
+		else
+			message = message .. ', ' .. skin
+		end
+	end
+
+	TriggerEvent('chat:addMessage', { args = { '^2Available skins', message } })
+end, false)
+
+RegisterCommand('speedotoggle', function(source, args, rawCommand)
+	toggleSpeedo()
+end, false)

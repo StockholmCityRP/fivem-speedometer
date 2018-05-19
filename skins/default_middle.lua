@@ -1,5 +1,3 @@
-
-
 local skinData = {
 	-- names
 	skinName = "default_middle",
@@ -10,7 +8,7 @@ local skinData = {
 	-- daytime textures this:
 	-- "needle_day", "tachometer_day", "speedometer_day", "fuelgauge_day"
 	-- these names are hardcoded
-centerCoords = {0.45,0.85},
+	centerCoords = {0.45,0.85},
 	-- icon locations
 											-- these are xy,width,height
 	lightsLoc = {0.010,0.092,0.018,0.02},

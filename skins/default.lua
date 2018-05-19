@@ -1,5 +1,3 @@
-
-
 local skinData = {
 	-- names
 	skinName = "default",
@@ -13,7 +11,6 @@ local skinData = {
 
 	-- where the speedo gets centered, values below are OFFSETS from this.
 	centerCoords = {0.8,0.8},
-
 
 	-- icon locations
 	-- these are xy,width,height
